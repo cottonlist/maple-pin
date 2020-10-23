@@ -5,12 +5,10 @@
 using std::cout;
 using std::endl;
 
-static PIN_LOCK lock1;
-static PIN_LOCK lock2;
-static PIN_LOCK lock0;
+static PIN_LOCK pinLock;
 
-static PIN_SEMAPHORE sem1;
-static PIN_SEMAPHORE sem2;
+static PIN_SEMAPHORE pinSemaphore1;
+static PIN_SEMAPHORE pinSemaphore2;
 
 static int ins_no_th1 = 0;
 static int ins_no_th2 = 0;
@@ -35,38 +33,33 @@ static int interleaving[] = {1, 2, 4, 4};
 static void wait_wrapper_idiom2 (int threadid) {
 	if (threadid == 1)
 	{
-		PIN_GetLock(&lock0, threadid);
+		PIN_GetLock(&pinLock, threadid);
 		cout << "Thread " << threadid << " ins " << ins_no_th1 << " starting..." << endl;
-		PIN_ReleaseLock(&lock0);
+		PIN_ReleaseLock(&pinLock);
 
-		if (interleaving[0] == 1 && interleaving[3] == ins_no_th1) {
-			PIN_GetLock(&lock1, threadid);
-			PIN_SemaphoreWait(&sem2);
-			PIN_ReleaseLock(&lock1);
+		if (interleaving[0] == 1 && interleaving[3] == ins_no_th1) 
+		{
+			PIN_SemaphoreWait(&pinSemaphore2);
 		} 
+
 		if (interleaving[0] == 2 && interleaving[2] == ins_no_th1)
 		{
-			PIN_GetLock(&lock1, threadid);
-			PIN_SemaphoreWait(&sem1);
-			PIN_ReleaseLock(&lock1);
+			PIN_SemaphoreWait(&pinSemaphore1);
 		}
 	}
 	if (threadid == 2)
 	{
-		PIN_GetLock(&lock0, threadid);
+		PIN_GetLock(&pinLock, threadid);
 		cout << "Thread " << threadid << " ins " << ins_no_th2 << " starting..." << endl;
-		PIN_ReleaseLock(&lock0);
+		PIN_ReleaseLock(&pinLock);
 
-		if (interleaving[0] == 2 && interleaving[3] == ins_no_th2) {
-			PIN_GetLock(&lock2, threadid);
-			PIN_SemaphoreWait(&sem2);
-			PIN_ReleaseLock(&lock2);
+		if (interleaving[0] == 2 && interleaving[3] == ins_no_th2) 
+		{
+			PIN_SemaphoreWait(&pinSemaphore2);
 		} 
 		if (interleaving[0] == 1 && interleaving[2] == ins_no_th2)
 		{
-			PIN_GetLock(&lock2, threadid);
-			PIN_SemaphoreWait(&sem1);
-			PIN_ReleaseLock(&lock2);
+			PIN_SemaphoreWait(&pinSemaphore1);
 		}
 	}
 }
@@ -74,49 +67,37 @@ static void wait_wrapper_idiom2 (int threadid) {
 static void signal_wrapper_idiom2 (int threadid) {
 	if (threadid == 1)
 	{
-		
-		
 		if (interleaving[0] == 1 && interleaving[1] == ins_no_th1)
 		{
-			PIN_GetLock(&lock1, threadid);
-			PIN_SemaphoreSet(&sem1);
-			PIN_ReleaseLock(&lock1);
+			PIN_SemaphoreSet(&pinSemaphore1);
 		}
 		
 		if (interleaving[0] == 2 && interleaving[2] == ins_no_th1)
 		{
-			PIN_GetLock(&lock1, threadid);
-			PIN_SemaphoreSet(&sem2);
-			PIN_ReleaseLock(&lock1);
+			PIN_SemaphoreSet(&pinSemaphore2);
 		}
 
-		PIN_GetLock(&lock0, threadid);
+		PIN_GetLock(&pinLock, threadid);
 		cout << "Thread " << threadid << " ins " << ins_no_th1 << " ending..." << endl;
 		ins_no_th1++;
-		PIN_ReleaseLock(&lock0);
+		PIN_ReleaseLock(&pinLock);
 	}
 	if (threadid == 2)
 	{
-		
-		
 		if (interleaving[0] == 2 && interleaving[1] == ins_no_th2)
 		{
-			PIN_GetLock(&lock2, threadid);
-			PIN_SemaphoreSet(&sem1);
-			PIN_ReleaseLock(&lock2);
+			PIN_SemaphoreSet(&pinSemaphore1);
 		}
 
 		if (interleaving[0] == 1 && interleaving[2] == ins_no_th2)
 		{
-			PIN_GetLock(&lock2, threadid);
-			PIN_SemaphoreSet(&sem2);
-			PIN_ReleaseLock(&lock2);
+			PIN_SemaphoreSet(&pinSemaphore2);
 		}
 
-		PIN_GetLock(&lock0, threadid);
+		PIN_GetLock(&pinLock, threadid);
 		cout << "Thread " << threadid << " ins " << ins_no_th2 << " ending..." << endl;
 		ins_no_th2++;
-		PIN_ReleaseLock(&lock0);
+		PIN_ReleaseLock(&pinLock);
 	}
 }
 
@@ -174,12 +155,10 @@ int main(int argc, char *argv[])
 	PIN_InitSymbols();
 	PIN_Init(argc, argv);
 
-	PIN_InitLock(&lock1);
-	PIN_InitLock(&lock2);
-	PIN_InitLock(&lock0);
+	PIN_InitLock(&pinLock);
 
-	PIN_SemaphoreInit(&sem1);
-	PIN_SemaphoreInit(&sem2);
+	PIN_SemaphoreInit(&pinSemaphore1);
+	PIN_SemaphoreInit(&pinSemaphore2);
 
 
 	// if (idiom == 1)
